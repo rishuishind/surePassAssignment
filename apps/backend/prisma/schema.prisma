@@ -1,0 +1,177 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  users    User[]
+  sites    Site[]
+}
+
+model User {
+  id             String   @id @default(cuid())
+  email          String   @unique
+  passwordHash   String
+  name           String
+  role           String   @default("member") // "admin" | "member"
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization Organization @relation(fields: [organizationId], references: [id])
+}
+
+model Site {
+  id             String   @id @default(cuid())
+  domain         String
+  displayName    String?
+  organizationId String
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  organization     Organization      @relation(fields: [organizationId], references: [id])
+  scanRuns         ScanRun[]
+  cookies          DiscoveredCookie[]
+  bannerConfigs    BannerConfig[]
+  consentRecords   ConsentRecord[]
+
+  @@unique([domain, organizationId])
+}
+
+model ScanRun {
+  id              String    @id @default(cuid())
+  siteId          String
+  status          String    @default("pending") // "pending" | "running" | "done" | "failed"
+  pagesVisited    Int       @default(0)
+  cookiesFound    Int       @default(0)
+  errorMessage    String?
+  startedAt       DateTime?
+  completedAt     DateTime?
+  createdAt       DateTime  @default(now())
+
+  site     Site       @relation(fields: [siteId], references: [id])
+  logs     ScanLog[]
+  cookieSeens CookieSeenInScan[]
+}
+
+model ScanLog {
+  id        String   @id @default(cuid())
+  scanRunId String
+  level     String   @default("info") // "info" | "warn" | "error"
+  message   String
+  url       String?
+  createdAt DateTime @default(now())
+
+  scanRun ScanRun @relation(fields: [scanRunId], references: [id])
+}
+
+model DiscoveredCookie {
+  id             String   @id @default(cuid())
+  siteId         String
+  name           String
+  domain         String
+  path           String?
+  isFirstParty   Boolean  @default(true)
+  secure         Boolean  @default(false)
+  httpOnly       Boolean  @default(false)
+  sameSite       String?
+  expiresAt      DateTime?
+  maxAge         Int?     // in seconds
+  durationLabel  String?  // human readable: "Session", "1 year", etc.
+
+  // Auto-classification
+  autoCategory      String  @default("uncategorized")
+  autoConfidence    String  @default("none")
+  autoSource        String  @default("unknown")
+  autoReason        String?
+
+  // Manual override (survives rescans)
+  manualCategory    String?
+  manualDescription String?
+  isManuallyReviewed Boolean @default(false)
+  reviewedAt        DateTime?
+
+  firstSeenScanId String?
+  lastSeenScanId  String?
+  firstSeenAt     DateTime @default(now())
+  lastSeenAt      DateTime @default(now())
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  site     Site               @relation(fields: [siteId], references: [id])
+  seenIns  CookieSeenInScan[]
+
+  @@unique([siteId, name, domain])
+}
+
+model CookieSeenInScan {
+  id         String @id @default(cuid())
+  scanRunId  String
+  cookieId   String
+  pageUrl    String?
+  createdAt  DateTime @default(now())
+
+  scanRun ScanRun          @relation(fields: [scanRunId], references: [id])
+  cookie  DiscoveredCookie @relation(fields: [cookieId], references: [id])
+
+  @@unique([scanRunId, cookieId])
+}
+
+model BannerConfig {
+  id             String   @id @default(cuid())
+  siteId         String
+  version        Int      @default(1)
+  isActive       Boolean  @default(true)
+
+  // Banner text
+  title          String   @default("We use cookies")
+  description    String   @default("We use cookies to enhance your experience. By continuing to visit this site you agree to our use of cookies.")
+  acceptLabel    String   @default("Accept All")
+  rejectLabel    String   @default("Reject All")
+  preferencesLabel String @default("Manage Preferences")
+
+  // Appearance
+  position       String   @default("bottom") // "bottom" | "top" | "modal" | "corner"
+  primaryColor   String   @default("#3B82F6")
+  backgroundColor String  @default("#1E293B")
+  textColor      String   @default("#F1F5F9")
+  buttonTextColor String  @default("#FFFFFF")
+
+  // Category configs (JSON)
+  categoryConfigs String  @default("[]")
+
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  site           Site            @relation(fields: [siteId], references: [id])
+  consentRecords ConsentRecord[]
+}
+
+model ConsentRecord {
+  id              String   @id @default(cuid())
+  siteId          String
+  bannerConfigId  String?
+  bannerVersion   Int?
+  visitorId       String   // anonymous UUID stored in visitor localStorage
+  action          String   // "accepted" | "rejected" | "customized"
+  categoriesAllowed String @default("[]") // JSON array
+  source          String   @default("embedded_banner") // "embedded_banner" | "test_harness"
+  ipHash          String?  // hashed for privacy
+  userAgent       String?
+  createdAt       DateTime @default(now())
+
+  site         Site          @relation(fields: [siteId], references: [id])
+  bannerConfig BannerConfig? @relation(fields: [bannerConfigId], references: [id])
+}
