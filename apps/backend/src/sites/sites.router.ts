@@ -58,6 +58,10 @@ sitesRouter.post('/', async (req: AuthRequest, res: Response) => {
         displayName: body.displayName || domain,
         organizationId: req.user!.organizationId,
       },
+      include: {
+        scanRuns: { take: 1 },
+        _count: { select: { cookies: true, consentRecords: true } },
+      },
     });
     return res.status(201).json({ success: true, data: site });
   } catch (err) {

@@ -34,9 +34,9 @@ export default function OverviewPage() {
     api.getSites().then(res => { setSites(res.data); setLoading(false); }).catch(() => setLoading(false));
   }, []);
 
-  const totalCookies = sites.reduce((a, s) => a + s._count.cookies, 0);
-  const totalConsent = sites.reduce((a, s) => a + s._count.consentRecords, 0);
-  const failedScans = sites.filter(s => s.scanRuns[0]?.status === 'failed').length;
+  const totalCookies = sites.reduce((a, s) => a + (s._count?.cookies || 0), 0);
+  const totalConsent = sites.reduce((a, s) => a + (s._count?.consentRecords || 0), 0);
+  const failedScans = sites.filter(s => s.scanRuns?.[0]?.status === 'failed').length;
 
   const handleAddSite = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -45,7 +45,8 @@ export default function OverviewPage() {
     try {
       const res = await api.createSite(domain.trim());
       setSites(prev => [res.data, ...prev]);
-      setDomain(''); setShowAdd(false);
+      setDomain('');
+      setShowAdd(false);
     } catch (err: any) {
       setError(err.message);
     } finally { setAdding(false); }
@@ -111,7 +112,7 @@ export default function OverviewPage() {
 
           {loading ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
-              {[1,2,3].map(i => <div key={i} className="skeleton" style={{ height: 52, borderRadius: 8 }} />)}
+              {[1, 2, 3].map(i => <div key={i} className="skeleton" style={{ height: 52, borderRadius: 8 }} />)}
             </div>
           ) : sites.length === 0 ? (
             <div className="empty-state">
@@ -139,14 +140,14 @@ export default function OverviewPage() {
                         <div className="td-muted">{site.domain}</div>
                       </td>
                       <td>
-                        {site.scanRuns[0] ? (
+                        {site.scanRuns?.[0] ? (
                           <StatusBadge status={site.scanRuns[0].status} />
                         ) : (
                           <span className="badge badge-neutral">Never scanned</span>
                         )}
                       </td>
-                      <td><span style={{ fontWeight: 700 }}>{site._count.cookies}</span></td>
-                      <td><span style={{ fontWeight: 700 }}>{site._count.consentRecords}</span></td>
+                      <td><span style={{ fontWeight: 700 }}>{site._count?.cookies || 0}</span></td>
+                      <td><span style={{ fontWeight: 700 }}>{site._count?.consentRecords || 0}</span></td>
                       <td>
                         <Link href={`/sites/${site.id}`} className="btn btn-secondary btn-sm">
                           Manage →
