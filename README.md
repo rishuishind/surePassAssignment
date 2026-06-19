@@ -2,10 +2,6 @@
 
 > A full-stack proof-of-concept Cookie Consent Management dashboard. Scan websites for cookies, auto-classify them, configure a consent banner, embed it on any site, and view visitor consent records.
 
-## 🎥 Demo Video
-
-![CookieGuard Demo Video](/Users/rishabhsharma/Desktop/Screen Recording 2026-06-19 at 6.54.44 PM.mov)
-
 ---
 
 ## 🚀 Quick Start
