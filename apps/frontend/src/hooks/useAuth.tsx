@@ -30,6 +30,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await api.me();
       setUser(res.data.user);
       setOrg(res.data.organization);
+      router.push('/');
     } catch {
       localStorage.removeItem('cookieguard_token');
     } finally {
