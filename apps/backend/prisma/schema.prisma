@@ -61,7 +61,7 @@ model ScanRun {
   completedAt     DateTime?
   createdAt       DateTime  @default(now())
 
-  site     Site       @relation(fields: [siteId], references: [id])
+  site     Site       @relation(fields: [siteId], references: [id], onDelete: Cascade)
   logs     ScanLog[]
   cookieSeens CookieSeenInScan[]
 }
@@ -74,7 +74,7 @@ model ScanLog {
   url       String?
   createdAt DateTime @default(now())
 
-  scanRun ScanRun @relation(fields: [scanRunId], references: [id])
+  scanRun ScanRun @relation(fields: [scanRunId], references: [id], onDelete: Cascade)
 }
 
 model DiscoveredCookie {
@@ -110,7 +110,7 @@ model DiscoveredCookie {
   createdAt       DateTime @default(now())
   updatedAt       DateTime @updatedAt
 
-  site     Site               @relation(fields: [siteId], references: [id])
+  site     Site               @relation(fields: [siteId], references: [id], onDelete: Cascade)
   seenIns  CookieSeenInScan[]
 
   @@unique([siteId, name, domain])
@@ -123,8 +123,8 @@ model CookieSeenInScan {
   pageUrl    String?
   createdAt  DateTime @default(now())
 
-  scanRun ScanRun          @relation(fields: [scanRunId], references: [id])
-  cookie  DiscoveredCookie @relation(fields: [cookieId], references: [id])
+  scanRun ScanRun          @relation(fields: [scanRunId], references: [id], onDelete: Cascade)
+  cookie  DiscoveredCookie @relation(fields: [cookieId], references: [id], onDelete: Cascade)
 
   @@unique([scanRunId, cookieId])
 }
@@ -155,7 +155,7 @@ model BannerConfig {
   createdAt      DateTime @default(now())
   updatedAt      DateTime @updatedAt
 
-  site           Site            @relation(fields: [siteId], references: [id])
+  site           Site            @relation(fields: [siteId], references: [id], onDelete: Cascade)
   consentRecords ConsentRecord[]
 }
 
@@ -172,6 +172,6 @@ model ConsentRecord {
   userAgent       String?
   createdAt       DateTime @default(now())
 
-  site         Site          @relation(fields: [siteId], references: [id])
-  bannerConfig BannerConfig? @relation(fields: [bannerConfigId], references: [id])
+  site         Site          @relation(fields: [siteId], references: [id], onDelete: Cascade)
+  bannerConfig BannerConfig? @relation(fields: [bannerConfigId], references: [id], onDelete: SetNull)
 }

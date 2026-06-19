@@ -16,7 +16,7 @@ const PORT = process.env.PORT || 4000;
 const FRONTEND_URL = process.env.FRONTEND_URL || 'http://localhost:3000';
 
 app.use(cors({
-  origin: [FRONTEND_URL, 'http://localhost:3000', 'null'], // 'null' for local file:// demo pages
+  origin: true, // 'null' for local file:// demo pages
   credentials: true,
 }));
 app.use(express.json());

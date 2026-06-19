@@ -29,9 +29,16 @@ export default function SitesPage() {
   };
 
   const handleDelete = async (id: string, name: string) => {
-    if (!confirm(`Delete ${name}? This will remove all scan data.`)) return;
-    await api.deleteSite(id);
-    setSites(prev => prev.filter(s => s.id !== id));
+    if (!confirm(`Delete ${name}? This will remove all scan data.`)) {
+      return;
+    }
+    try {
+      await api.deleteSite(id);
+      setSites(prev => prev.filter(s => s.id !== id));
+    } catch (error) {
+      console.error(error);
+      alert("Failed to delete site");
+    }
   };
 
   return (
