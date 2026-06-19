@@ -2,7 +2,7 @@ import { Router, Response } from 'express';
 import { z } from 'zod';
 import { prisma } from '../utils/prisma';
 import { authenticate, AuthRequest } from '../middleware/auth.middleware';
-import { createObjectCsvStringifier } from 'csv-writer';
+// Manual CSV builder to avoid external dependency
 
 export const consentRouter = Router();
 consentRouter.use(authenticate);
@@ -58,29 +58,19 @@ consentRouter.get('/sites/:siteId/export', async (req: AuthRequest, res: Respons
     include: { bannerConfig: { select: { version: true } } },
   });
 
-  const csvStringifier = createObjectCsvStringifier({
-    header: [
-      { id: 'id', title: 'Record ID' },
-      { id: 'visitorId', title: 'Visitor ID' },
-      { id: 'action', title: 'Action' },
-      { id: 'categoriesAllowed', title: 'Categories Allowed' },
-      { id: 'bannerVersion', title: 'Banner Version' },
-      { id: 'source', title: 'Source' },
-      { id: 'createdAt', title: 'Timestamp' },
-    ],
-  });
+  const headers = ['Record ID', 'Visitor ID', 'Action', 'Categories Allowed', 'Banner Version', 'Source', 'Timestamp'];
+  const rows = records.map(r => [
+    r.id,
+    r.visitorId,
+    r.action,
+    r.categoriesAllowed,
+    String(r.bannerVersion ?? 'N/A'),
+    r.source,
+    r.createdAt.toISOString(),
+  ]);
 
-  const csvRecords = records.map(r => ({
-    id: r.id,
-    visitorId: r.visitorId,
-    action: r.action,
-    categoriesAllowed: r.categoriesAllowed,
-    bannerVersion: r.bannerVersion ?? 'N/A',
-    source: r.source,
-    createdAt: r.createdAt.toISOString(),
-  }));
-
-  const csv = csvStringifier.getHeaderString() + csvStringifier.stringifyRecords(csvRecords);
+  const escapeCSV = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
+  const csv = [headers, ...rows].map(row => row.map(escapeCSV).join(',')).join('\n');
 
   res.setHeader('Content-Type', 'text/csv');
   res.setHeader('Content-Disposition', `attachment; filename="consent-records-${site.domain}-${Date.now()}.csv"`);

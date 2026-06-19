@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Demo Page — CookieGuard Embed Test</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; background: #0f1117; color: #e2e8f0; min-height: 100vh; }
+    .hero { background: linear-gradient(135deg, #0f1117 0%, #1a2035 100%); padding: 80px 40px; text-align: center; border-bottom: 1px solid rgba(255,255,255,0.08); }
+    .hero h1 { font-size: 42px; font-weight: 800; margin-bottom: 16px; background: linear-gradient(135deg, #f1f5f9, #94a3b8); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .hero p { font-size: 18px; color: #94a3b8; max-width: 520px; margin: 0 auto 32px; line-height: 1.7; }
+    .hero-badge { display: inline-flex; align-items: center; gap: 8px; background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.3); border-radius: 999px; padding: 6px 16px; font-size: 13px; color: #60a5fa; margin-bottom: 24px; }
+    .content { max-width: 900px; margin: 0 auto; padding: 60px 40px; }
+    .section { margin-bottom: 48px; }
+    .section h2 { font-size: 22px; font-weight: 700; margin-bottom: 16px; color: #f1f5f9; border-left: 3px solid #3b82f6; padding-left: 14px; }
+    .section p { color: #94a3b8; line-height: 1.8; margin-bottom: 12px; }
+    .card { background: #1e293b; border: 1px solid rgba(148,163,184,0.12); border-radius: 12px; padding: 24px; margin-bottom: 16px; }
+    .card h3 { font-size: 16px; font-weight: 600; margin-bottom: 8px; }
+    .card p { color: #94a3b8; font-size: 14px; line-height: 1.7; }
+    .cookie-info { background: #0f1117; border: 1px solid rgba(255,255,255,0.06); border-radius: 8px; padding: 16px; font-family: monospace; font-size: 12px; color: #7dd3fc; margin-top: 12px; }
+    .reset-btn { margin-top: 20px; padding: 10px 24px; background: rgba(239,68,68,0.15); border: 1px solid rgba(239,68,68,0.3); color: #ef4444; border-radius: 8px; cursor: pointer; font-size: 14px; font-weight: 600; }
+    .reset-btn:hover { background: rgba(239,68,68,0.25); }
+  </style>
+</head>
+<body>
+
+  <!-- REPLACE SITE_ID_HERE with the actual site ID from CookieGuard dashboard -->
+  <!-- This script will render the consent banner on this page -->
+  <script
+    src="http://localhost:4000/embed/banner.js"
+    data-site-id="SITE_ID_HERE"
+    data-api-url="http://localhost:4000"
+    async
+  ></script>
+
+  <!-- Demo: Set some cookies via JavaScript to test scanning -->
+  <script>
+    // These cookies simulate what a real website would set
+    document.cookie = "demo_session=abc123; path=/; max-age=86400";
+    document.cookie = "demo_analytics=ua-12345; path=/; max-age=31536000";
+    document.cookie = "demo_preference=dark-mode; path=/; max-age=2592000";
+    document.cookie = "demo_marketing=fbclid-xyz; path=/; max-age=7776000";
+  </script>
+
+  <div class="hero">
+    <div class="hero-badge">🍪 CookieGuard Embed Demo</div>
+    <h1>Demo Test Page</h1>
+    <p>This page demonstrates the CookieGuard consent banner embed. The banner above (if configured) is loaded from the CookieGuard backend.</p>
+  </div>
+
+  <div class="content">
+    <div class="section">
+      <h2>How This Works</h2>
+      <p>This page has the CookieGuard embed script installed. When you visit this page:</p>
+      <div class="card">
+        <h3>1. Embed Script Loads</h3>
+        <p>The <code>&lt;script&gt;</code> tag in the head loads <strong>banner.js</strong> from the CookieGuard backend. It reads the <code>data-site-id</code> to know which banner config to fetch.</p>
+      </div>
+      <div class="card">
+        <h3>2. Banner Config Fetched</h3>
+        <p>The script calls <code>GET /api/public/banner/:siteId</code> to retrieve the latest active banner configuration saved in the dashboard.</p>
+      </div>
+      <div class="card">
+        <h3>3. Banner Rendered</h3>
+        <p>The consent banner is injected into the page DOM with your custom colors, text, position, and category options.</p>
+      </div>
+      <div class="card">
+        <h3>4. Consent Recorded</h3>
+        <p>When a visitor clicks Accept, Reject, or saves preferences, a consent event is sent to <code>POST /api/public/consent</code> and appears in your Consent Log.</p>
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Demo Cookies Set By This Page</h2>
+      <p>This page sets 4 demo cookies via JavaScript when loaded — these will be discovered by the CookieGuard scanner when you scan this page's URL.</p>
+      <div class="cookie-info" id="cookie-display">Loading cookies…</div>
+      <button class="reset-btn" onclick="resetConsent()">🔄 Reset Consent (Show Banner Again)</button>
+    </div>
+
+    <div class="section">
+      <h2>Test Instructions</h2>
+      <div class="card">
+        <h3>Setup Steps</h3>
+        <p>1. Open the CookieGuard dashboard at <a href="http://localhost:3000" style="color: #60a5fa">http://localhost:3000</a></p>
+        <p>2. Add a site and scan it</p>
+        <p>3. Go to Banner Builder → configure and save a banner</p>
+        <p>4. Copy the site ID from the embed snippet and update the <code>data-site-id</code> in this file</p>
+        <p>5. Open this page — the banner should appear</p>
+        <p>6. Click Accept/Reject/Preferences and check the Consent Log in the dashboard</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Show current cookies
+    function showCookies() {
+      var el = document.getElementById('cookie-display');
+      var cookies = document.cookie.split(';').filter(c => c.trim());
+      el.textContent = cookies.length > 0 ? cookies.map(c => c.trim()).join('\n') : '(no cookies set)';
+    }
+
+    function resetConsent() {
+      localStorage.removeItem('cookieguard_consent');
+      alert('Consent cleared. Refresh the page to see the banner again.');
+    }
+
+    showCookies();
+    // Refresh cookie display after a short delay
+    setTimeout(showCookies, 500);
+  </script>
+</body>
+</html>

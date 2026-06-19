@@ -119,7 +119,8 @@ export async function runScan(scanRunId: string, siteId: string, domain: string)
         // Discover same-site links for further crawling
         if (pagesVisited < MAX_PAGES) {
           const links = await page.$$eval('a[href]', (anchors) =>
-            anchors.map((a) => (a as HTMLAnchorElement).href).filter(Boolean)
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            anchors.map((a) => (a as any).href as string).filter(Boolean)
           );
           for (const link of links) {
             const normalized = parseSameSiteUrl(link, startUrl);
